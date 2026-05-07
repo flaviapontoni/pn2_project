@@ -1,0 +1,8 @@
+ifconfig eth0 10.200.0.254/24 up
+chmod +x /pox/pox.py
+
+# AGGIUNGI openflow.discovery PRIMA di ml_routing!
+/pox/pox.py openflow.discovery openflow.of_01 --port=6653 ml_routing &
+
+sleep 3
+echo "Controller avviato!"
