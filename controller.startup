@@ -5,4 +5,4 @@ chmod +x /pox/pox.py
 /pox/pox.py openflow.discovery openflow.of_01 --port=6653 ml_routing &
 
 sleep 3
-echo "Controller avviato!"
+echo "Controller started"

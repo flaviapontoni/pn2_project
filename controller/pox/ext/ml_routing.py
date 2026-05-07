@@ -15,17 +15,17 @@ class MLRoutingApp(object):
         self.graph = {}
         self.mac_to_location = {}
         
-        # --- VARIABILI PROGETTO ---
+        # --- PROJECT VARIABLES ---
         self.collector_ip = IPAddr("10.0.0.100")
         self.collector_port = 5000
         
         self.active_workers = set()
         self.worker_stats = {} 
-        self.training_start_time = time.time() # t=0 per calcolare la Fase
+        self.training_start_time = time.time()  # t=0 to calculate Phase
         
         Timer(3, self._request_stats, recurring=True)
         
-        log.info("ML Routing Controller: PROGETTO COMPLETO ATTIVO (Discovery, Stats, ECMP)")
+        log.info("ML Routing Controller: COMPLETE PROJECT ACTIVE (Discovery, Stats, ECMP)")
 
     def _handle_ConnectionUp(self, event):
         dpid = event.dpid
@@ -44,7 +44,7 @@ class MLRoutingApp(object):
                 del self.graph[link.dpid2][link.dpid1]
 
     # ==========================================
-    # FASE 3: ALGORITMO ECMP (Load Balancing)
+    # PHASE 3: ECMP ALGORITHM (Load Balancing)
     # ==========================================
     def get_balanced_path(self, src_dpid, dst_dpid, src_identifier):
         if src_dpid == dst_dpid:
@@ -79,7 +79,7 @@ class MLRoutingApp(object):
         return chosen_path
 
     # ==========================================
-    # FASE 2: STATISTICHE (K_v, D_v, T_v, Phi_v)
+    # PHASE 2: STATISTICS (K_v, D_v, T_v, Phi_v)
     # ==========================================
     def _request_stats(self):
         for connection in core.openflow.connections:
@@ -99,17 +99,17 @@ class MLRoutingApp(object):
                         self.worker_stats[worker_ip] = {
                             'last_bytes': current_bytes, 
                             'last_time': now,
-                            'phi_v': None # Memorizza la fase
+                            'phi_v': None  # Store the phase
                         }
                     else:
                         last_bytes = self.worker_stats[worker_ip]['last_bytes']
                         last_time = self.worker_stats[worker_ip]['last_time']
                         delta_bytes = current_bytes - last_bytes
                         
-                        if delta_bytes > 50000: # Se i byte inviati superano i 50KB = è un BURST
+                        if delta_bytes > 50000:  # If bytes sent exceed 50KB = it's a BURST
                             delta_time = now - last_time
                             
-                            # Se è il primo burst di questo worker, calcoliamo la fase
+                            # If this is the worker's first burst, calculate the phase
                             if self.worker_stats[worker_ip]['phi_v'] is None:
                                 self.worker_stats[worker_ip]['phi_v'] = now - self.training_start_time
                             
@@ -125,7 +125,7 @@ class MLRoutingApp(object):
                         self.worker_stats[worker_ip]['last_bytes'] = current_bytes
 
     # ==========================================
-    # FASE 1: GESTIONE PACCHETTI (Discovery)
+    # PHASE 1: PACKET HANDLING (Discovery)
     # ==========================================
     def _handle_PacketIn(self, event):
         packet = event.parsed
@@ -155,10 +155,10 @@ class MLRoutingApp(object):
                 worker_ip = ipv4_packet.srcip
                 if worker_ip not in self.active_workers:
                     self.active_workers.add(worker_ip)
-                    # Resettiamo il tempo t=0 quando scopriamo il primo worker, così le Fasi sono precise!
+                    # Reset time t=0 when we discover the first worker, so Phases are precise!
                     if len(self.active_workers) == 1:
                         self.training_start_time = time.time()
-                    log.info(f" WORKER {worker_ip} SCOPERTO. K_v sale a: {len(self.active_workers)}")
+                    log.info(f" WORKER {worker_ip} DISCOVERED. K_v increases to: {len(self.active_workers)}")
 
         if dst_mac.is_multicast:
             self.flood_to_hosts(event)
